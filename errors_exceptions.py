@@ -10,19 +10,19 @@ class CanNotDecryptError(InvalidTargetError):
     pass
 class PathNotFoundError(InvalidTargetError):
     pass
-class FileProccessingError(Exception):
+class FileProcessingError(Exception):
     pass
-class FileReadError(FileProccessingError):
+class FileReadError(FileProcessingError):
     pass
-class FileWriteError(FileProccessingError):
+class FileWriteError(FileProcessingError):
     pass
-class DecryptionTokenError(FileProccessingError):
+class DecryptionTokenError(FileProcessingError):
     pass
 class FaceCamError(Exception):
     pass
 class NoFaceDetected(FaceCamError):
     pass
-class MultipileFacesDetected(FaceCamError):
+class MultipleFacesDetected(FaceCamError):
     pass
 class NoWebCamDetected(FaceCamError):
     pass

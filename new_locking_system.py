@@ -2,7 +2,7 @@ import os
 import shutil
 import database_manager as dbm
 import errors_exceptions as err
-import logging_system as log
+import logs_system as log
 import cryptography.fernet
 from cryptography.fernet import Fernet
 from enum import Enum
@@ -13,12 +13,13 @@ class Mode(Enum):
     DEC = 2
 
 class LockSystem():
-    def __init__(self, logging_manger: log.Logging, db_manger: dbm.DataBaseManager = None):
+    def __init__(self, user_id: int, logging_manger: log.Logging, db_manger: dbm.DataBaseManager = None):
         if not db_manger:
             db_manger = dbm.DataBaseManager()
         self.working_dir = Path(os.getcwd()).resolve()
         self.db_instance = db_manger
         self.log_instance = logging_manger
+        self.user_id = user_id
 
     # checks if the target folder is valid to encrypt or decrypt
     def confirm_target_folder(self, user_path: str, mode = Mode):
@@ -51,8 +52,10 @@ class LockSystem():
                 
                 try:
                     self.encrypt_helper(file_path=file_path, fn_key=fn, copied_filepath=copied_filepath)
-                except err.FileProccessingError:
+                    self.log_instance.announce_file_encrypt(self.user_id, True, file)
+                except err.FileProcessingError as e:
                     self.failed_files_recovery(failed_file=file_path, copied_folder=temp_folder, target_folder=target_folder_path)
+                    self.log_instance.announce_file_encrypt(self.user_id, False, file, e)
                     continue
 
     # the decryption logic
@@ -66,8 +69,10 @@ class LockSystem():
                 
                 try:
                     self.decrypt_helper(file_path=file_path, fn_key=fn, copied_filepath=copied_filepath)
-                except err.FileProccessingError:
+                    self.log_instance.announce_file_decrypt(self.user_id, True, file)
+                except err.FileProcessingError as e:
                     self.failed_files_recovery(failed_file=file_path, copied_folder=temp_folder, target_folder=target_folder_path)
+                    self.log_instance.announce_file_decrypt(self.user_id, False, file, e)
                     continue
 
     # generate keys for the ecryption/decryption logics & decide which one will run

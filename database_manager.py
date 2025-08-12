@@ -2,6 +2,9 @@ import sqlite3 as sql
 import pickle
 import numpy as np
 import errors_exceptions as err
+import pathlib
+import security_system as ss
+from enum import Enum
 from dataclasses import dataclass
 
 @dataclass
@@ -11,15 +14,25 @@ class FaceData:
     encoding: np.ndarray
 
 @dataclass
-class user_info:
+class UserInfo:
     id: int
     name: str
     access: str
 
+@dataclass
+class FolderInfo:
+    id: int
+    name: str
+    path: str
+
+class Access(Enum):
+    level_full = "FULL"
+    level_limited = "LIMITED"
 
 class DataBaseManager():
     def __init__(self, db_path = "face_locking_system.db"):
         self.db_path = db_path
+        self.security = ss.SercuritySystem()
         self.conn = None
         try:
             self.conn = sql.connect(self.db_path)
@@ -34,7 +47,7 @@ class DataBaseManager():
                             name TEXT NOT NULL,
                             encoding BLOB NOT NULL,
                             access TEXT NOT NULL,
-                            pin INTEGER NOT NULL
+                            pin TEXT NOT NULL
                             ) 
                             """)
 
@@ -47,7 +60,15 @@ class DataBaseManager():
                             """)
         
         self.conn.commit()
-    
+
+    # checks if the there are entres in faces table
+    def not_empty_database(self):
+        self.cursor.execute("SELECT id FROM faces")
+        result = self.cursor.fetchall()
+        if len(result) > 0:
+            return True
+        return False
+
     # compare the path with the paths in encrypted_folders >> folder_path
     def check_enc_list(self, path_to_check):
         path_to_check = str(path_to_check)
@@ -61,14 +82,15 @@ class DataBaseManager():
         login_info = self.cursor.fetchone()
 
         if login_info:
-            name, access = login_info
-            return {"name": name, "access": access}
+            login_info = UserInfo(id=id, name=login_info[0], access=login_info[1])
+            return login_info
         else:
             return
         
     # adds a new user, insert name, face_encoding, access, pin into faces
-    def add_user_info(self, name: str, encoding, access, pin: int):
+    def add_user_info(self, name: str, encoding, pin: str, access: Access):
         encoding = pickle.dumps(encoding)
+        pin = self.security.hash_pin(pin)
         self.cursor.execute("INSERT INTO faces(name, encoding, access, pin) VALUES (?, ?, ?, ?)", (name, encoding, access, pin,))
         user_id = self.cursor.lastrowid
         self.conn.commit()
@@ -106,17 +128,35 @@ class DataBaseManager():
         self.cursor.execute("DELETE FROM encrypted_folders WHERE folder_path = ?", (folder_path,))
         self.conn.commit()
 
+    # check if the pin is correct for login
+    def check_pin(self, id, pin):
+        self.cursor.execute("SELECT pin FROM faces WHERE id = ?", (id,))
+        stored_hash = self.cursor.fetchone()
+        pin = self.security.hash_pin(pin)
+        if stored_hash[0] == pin:
+            return True
+        return False
+
     # return encrypted folders for ui display
     def list_encrypted_folders(self):
-        self.cursor.execute("SELECT folder_path FROM encrypted_folders")
+        folders_info = []
+        self.cursor.execute("SELECT id, folder_path FROM encrypted_folders")
         folders_list = self.cursor.fetchall()
-        return folders_list
+        for data in folders_list:
+            folder_path = pathlib.Path(data[1])
+            folders_info.append(FolderInfo(id=data[0], name=folder_path.name, path=data[1]))
+        return folders_info
 
     # list all users for ui display
     def list_users(self):
+        user_info = []
         self.cursor.execute("SELECT id, name, access FROM faces")
         user_list = self.cursor.fetchall()
+        for data in user_list:
+            user_info.append(UserInfo(id=data[0], name=data[1], access=data[2]))
+        return user_info
 
+    # exit proccess
     def close(self):
         if self.conn:
             self.conn.close()

@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 import face_recognition as fc
 import time
-import logging_system as log
+import logs_system as log
 import database_manager as dbm
 import errors_exceptions as err
 
@@ -58,7 +58,7 @@ class facialRecognitionSystem():
             faces_index = fc.face_locations(frame)
             
             if len(faces_index) > 1:
-                raise err.MultipileFacesDetected("Error: multiple faces detected")
+                raise err.MultipleFacesDetected("Error: multiple faces detected")
             
             if faces_index:
                 encodings = fc.face_encodings(frame, faces_index)
@@ -68,8 +68,9 @@ class facialRecognitionSystem():
         
         # might be unnecessary with the frames check in scan_face
         if not face_encoding:
+            self.log_instance.announce_face_scan(False, "Facescan")
             raise err.NoFaceDetected("Error: no face detected")
-
+        self.log_instance.announce_face_scan(True, "Facescan")
         return face_encoding
 
     # public function to manage scan_face and identify_faces
@@ -90,10 +91,13 @@ class facialRecognitionSystem():
         avg_encoding = np.mean(face_encoding, axis=0)
 
         matches = fc.compare_faces(known_faces, avg_encoding, tolerance_level)
-
-        if True in matches:
-            match_index = matches.index(True)
+        if matches:
+            clean_matches = matches[0]
+        if clean_matches.any():
+            match_index = np.argmax(clean_matches)
             matched_user = db_info[match_index]
+            self.log_instance.announce_face_scan(True, "Face mathcing")
             return matched_user.id
         
+        self.log_instance.announce_face_scan(False, "Face mathcing")
         return None
