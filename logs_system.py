@@ -22,7 +22,7 @@ class Logging():
         entry = f"[{t}]"
         
         if user:
-            entry+= f' User: {user}'
+            entry+= f' User id: {user}'
         
         entry+= f'- [{event.upper()}]'
         
@@ -41,13 +41,13 @@ class Logging():
     def announce_login(self, user: int):
         t = timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(self.logs_file, 'a') as L:   
-            L.write(f"[{t}] --- User: {user} has logged in. \n")
+            L.write(f"[{t}] --- User id: {user} has logged in. \n")
             
     # announce user logging out
     def announce_logout(self, user: int):
         t = timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(self.logs_file, 'a') as L:         
-            L.write(f"[{t}] --- Sesession end --- User: {user} has logged out. \n")
+            L.write(f"[{t}] --- Sesession end --- User id: {user} has logged out. \n")
 
     # for login facescan and face match
     def announce_face_scan(self, status: bool, event: str, user: int = None, error: str = None):
@@ -58,6 +58,15 @@ class Logging():
     # for decryption
     def announce_file_decrypt(self, user: int, status: bool, file: str, error: str = None):
         self._log(status, "Decrypted", user, file, error)
+    # to clarify the folder that was accessd
+    def announce_folder_encrypt(self, user: int, folder: str):
+        t = timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(self.logs_file, 'a') as L:         
+            L.write(f"[{t}] --- User id: {user} --- [Attempted Encryption] --- Folder: {folder}\n")
+    def announce_folder_decrypt(self, user: int, folder: str):
+        t = timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(self.logs_file, 'a') as L:         
+            L.write(f"[{t}] --- User id: {user} --- [Attempted Decryption] --- Folder: {folder}\n")
     # not sure if necessary
     def announce_add_user(self, user_took_action: int, added_user: int, status: bool, error: str = None):
         self._log(status, "Added a user", user_took_action, added_user, error)

@@ -23,8 +23,11 @@ class LockSystem():
 
     # checks if the target folder is valid to encrypt or decrypt
     def confirm_target_folder(self, user_path: str, mode = Mode):
-        user_path = Path(user_path).resolve()
-        
+        user_path = Path(user_path)
+        if not user_path.is_absolute():
+            user_path = Path.home() / user_path
+        user_path = user_path.expanduser().resolve(strict=False)
+
         if not user_path.is_dir():
             raise err.PathNotFoundError(f"Invalid path: '{user_path}' is not a valid dirctory.")
         
@@ -78,6 +81,7 @@ class LockSystem():
     # generate keys for the ecryption/decryption logics & decide which one will run
     def enc_dec_dispatcher(self, target_folder_path, mode = Mode):
         if mode == Mode.DEC:
+            self.log_instance.announce_folder_decrypt(self.user_id, target_folder_path)
             key = self.db_instance.fetch_keys(target_folder_path)
             if not key:
                 raise err.DecKeyNotFoundError(f"Key not found: decrypt key for {target_folder_path} not in database.")
@@ -88,6 +92,7 @@ class LockSystem():
             self.db_instance.remove_encrypted_folder(folder_path=target_folder_path)
         
         else:
+            self.log_instance.announce_folder_encrypt(self.user_id, target_folder_path)
             key = Fernet.generate_key()
             copied_folder_path = self.recreate_target_folder(target_folder_path=target_folder_path)
             self.encrypt(key=key, target_folder_path=target_folder_path, temp_folder=copied_folder_path)

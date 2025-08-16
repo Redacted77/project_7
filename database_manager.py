@@ -35,7 +35,7 @@ class DataBaseManager():
         self.security = ss.SercuritySystem()
         self.conn = None
         try:
-            self.conn = sql.connect(self.db_path)
+            self.conn = sql.connect(self.db_path, check_same_thread=False)
             self.cursor = self.conn.cursor()
             self._create_tables()
         except sql.Error as e:
