@@ -40,10 +40,34 @@ It combines strong **encryption**, **facial recognition**, and a **secure databa
 ## Usage
 
 ```bash
+
+# Clone the repository
+git clone https://github.com/yourusername/folderlock.git
+cd folderlock
+
+# Create a virtual environment
+python -m venv venv
+
+# Activate it
+# Windows
+venv\Scripts\activate
+# Linux/macOS
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
 # Run the app
 python main.py
+```
+## NOTE
+By default, `pip install dlib` may try to compile from source, which fails unless you have Visual Studio Build Tools installed.  
+This project was tested on **Windows + Python 3.13** with the prebuilt wheel.
+Download a prebuilt .whl from a trusted source.
 
-# First Run
+
+
+## First Run
 1. Create a master password (cannot be changed later).
 2. Register your name, PIN, and face scan.
 3. Enter the app and choose from:
@@ -51,11 +75,12 @@ python main.py
    - Decrypt → select from the stored list.
    - Admin menu → manage users (new users have limited access by default).
 
-# Shortcuts
+## Shortcuts
 a - admin menu
 s - save data
 b - back
 q - quit
 ```
+
 
 
