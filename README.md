@@ -76,10 +76,11 @@ Download a prebuilt .whl from a trusted source.
    - Admin menu → manage users (new users have limited access by default).
 
 ## Shortcuts
-a - admin menu
-s - save data
-b - back
-q - quit
+- a - admin menu
+- s - save data
+- b - back
+- q - quit
+
 
 
 
