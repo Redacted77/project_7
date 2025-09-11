@@ -1,7 +1,0 @@
-Logging Start --- 2025-09-12_00-24-14
-----------------
-
-[2025-09-12 00:24:33] --- 'number of good frames: 5, total frames: 5'
-[2025-09-12 00:24:36]- [FACESCAN]- status: Successful
-[2025-09-12 00:24:37]- [FACE MATHCING]- status: Successful
-[2025-09-12 00:24:37] --- User id: 1 has logged in. 
