@@ -4,6 +4,7 @@ import numpy as np
 import errors_exceptions as err
 import pathlib
 import security_system as ss
+import logs_system as log
 from enum import Enum
 from dataclasses import dataclass
 
@@ -30,12 +31,14 @@ class Access(Enum):
     level_limited = "LIMITED"
 
 class DataBaseManager():
-    def __init__(self, db_path = "face_locking_system.db"):
+    def __init__(self, log: log.Logging, db_path = "face_locking_system.db", conn: sql.Connection = None):
         self.db_path = db_path
-        self.security = ss.SercuritySystem()
-        self.conn = None
+        self.security = ss.SercuritySystem(logging_manger=log)
+        self.log = log
         try:
-            self.conn = sql.connect(self.db_path, check_same_thread=False)
+            self.conn = conn
+            if not self.conn:
+                self.conn = sql.connect(self.db_path, check_same_thread=False)
             self.cursor = self.conn.cursor()
             self._create_tables()
         except sql.Error as e:
@@ -101,8 +104,15 @@ class DataBaseManager():
         face_data_list = []
         self.cursor.execute("SELECT id, name, encoding FROM faces")
         results = self.cursor.fetchall()
+        if not results:
+            self.log.generic_error("missing results from database")
+            return
         for user_id, name, encoding_blob in results:
-            norm_encoding = pickle.loads(encoding_blob)
+            norm_encoding_list = pickle.loads(encoding_blob)
+            norm_encoding = np.mean(norm_encoding_list, axis=0)
+            norm_encoding = np.array(norm_encoding).reshape(-1)
+            norm_encoding = np.array(norm_encoding).flatten()
+            
             face_data_list.append(FaceData(id=user_id, name=name, encoding=norm_encoding))
         return face_data_list
 
@@ -126,6 +136,11 @@ class DataBaseManager():
     def remove_encrypted_folder(self, folder_path):
         folder_path = str(folder_path)
         self.cursor.execute("DELETE FROM encrypted_folders WHERE folder_path = ?", (folder_path,))
+        self.conn.commit()
+    
+    # remove user and all related elements
+    def remove_user(self, user_id):
+        self.cursor.execute("DELETE FROM faces WHERE id = ?", (user_id,))
         self.conn.commit()
 
     # check if the pin is correct for login
@@ -152,10 +167,21 @@ class DataBaseManager():
         user_info = []
         self.cursor.execute("SELECT id, name, access FROM faces")
         user_list = self.cursor.fetchall()
+        if not user_list:
+            return
         for data in user_list:
             user_info.append(UserInfo(id=data[0], name=data[1], access=data[2]))
         return user_info
-
+    # edit user info
+    def edit_user_info(self, name, access, pin, user_id):
+        if name:
+            self.cursor.execute("UPDATE faces SET name = ? WHERE id = ?", (name, user_id,))
+        if access in (Access.level_full.value, Access.level_limited.value):
+            self.cursor.execute("UPDATE faces SET access = ? WHERE id = ?", (access, user_id,))
+        if pin:
+            pin = self.security.hash_pin(pin)
+            self.cursor.execute("UPDATE faces SET pin = ? WHERE id = ?", (pin, user_id,))
+        self.conn.commit()
     # exit proccess
     def close(self):
         if self.conn:

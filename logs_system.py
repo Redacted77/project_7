@@ -58,7 +58,7 @@ class Logging():
     # for decryption
     def announce_file_decrypt(self, user: int, status: bool, file: str, error: str = None):
         self._log(status, "Decrypted", user, file, error)
-    # to clarify the folder that was accessd
+    # to clarify the folder that was accessd for encryption and decryption
     def announce_folder_encrypt(self, user: int, folder: str):
         t = timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(self.logs_file, 'a') as L:         
@@ -67,14 +67,21 @@ class Logging():
         t = timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(self.logs_file, 'a') as L:         
             L.write(f"[{t}] --- User id: {user} --- [Attempted Decryption] --- Folder: {folder}\n")
-    # not sure if necessary
-    def announce_add_user(self, user_took_action: int, added_user: int, status: bool, error: str = None):
-        self._log(status, "Added a user", user_took_action, added_user, error)
     # for logging admin actions (remove/add users ect.)
     def log_admin_action(self, status: bool, event: str, user: int, target: str = None, error: str = None):
         self._log(status=status, event=event, user=user, target=target, error=error)
-    # for generic error/errors that dont need detail
+    # announce attempt logins
+    def announce_attempt_login(self):
+        t = timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(self.logs_file, 'a') as L:   
+            L.write(f"[{t}] --- failed login attempt. \n")
+    # for generic errors that dont need detail
     def generic_error(self, error: str):
         t = timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(self.logs_file, 'a') as L:         
-            L.write(f"[{t}] --- Error:'{error}'\n")
+            L.write(f"[{t}] --- Error: '{error}'\n")
+    # for logging generic messages
+    def generic_log(self, mess: str):
+        t = timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(self.logs_file, 'a') as L:         
+            L.write(f"[{t}] --- '{mess}'\n")

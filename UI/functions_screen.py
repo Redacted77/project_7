@@ -4,8 +4,8 @@ from textual.screen import Screen
 from textual.widgets import Button, Static
 from textual.containers import Center, Horizontal
 from textual.widgets import Footer, Header
-from database_manager import UserInfo
-from UI import encrypt_screen, decrypt_screen
+from database_manager import UserInfo, Access
+from UI import encrypt_screen, decrypt_screen, admin_screen
 import new_locking_system as LS
 if TYPE_CHECKING:
     from main import FolderLockApp
@@ -21,18 +21,18 @@ class _content(Horizontal):
         self.styles.align = ("center", "middle")
         
 class FunctionsScreen(Screen):
-    BINDINGS = [('q', "quit", "Quit"), ('a', "admin_menu", "Admin Menu")]
+    BINDINGS = [('q', "quit", "Quit"), ('a', "admin_menu", "Admin Menu"), ('s', "save", "Save changes")]
     def __init__(self, user_id: int):
         super().__init__()
         self.app: FolderLockApp
         self.user_id = user_id
         self.app.lock_system = LS.LockSystem(self.user_id,self.app.log_manger,self.app.db_manger)
         self.info: UserInfo
-        self.info = self.app.db_manger.return_login_info(self.user_id)
+        self.user_info = self.app.db_manger.return_login_info(self.user_id)
     
     def compose(self):
         yield Header()
-        label = Static(f"ID: {self.info.id} | Name: {self.info.name} | Access level: {self.info.access}")
+        label = Static(f"ID: {self.user_info.id} | Name: {self.user_info.name} | Access level: {self.user_info.access}")
         label.styles.text_align = "center"
         yield label
         yield Static("", id="status_label") 
@@ -47,15 +47,25 @@ class FunctionsScreen(Screen):
     def on_button_pressed(self, event: Button.Pressed):
         button_id = event.button.id
         if button_id == "decrypt":
-            self.app.push_screen(decrypt_screen.DecryptScreen(self.info))
+            self.app.push_screen(decrypt_screen.DecryptScreen(self.user_info))
         elif button_id == "encrypt":
-            self.app.push_screen(encrypt_screen.EncryptScreen(self.info))
+            self.app.push_screen(encrypt_screen.EncryptScreen(self.user_info))
     
     def message(self, mess):
         self.query_one("#status_label", Static).update(mess)
 
     def action_admin_menu(self):
-        pass # should check the user access level then go to admin menu screen
-    
+        if self.user_info.access == Access.level_full.value:
+            self.message("Access granted.")
+            self.app.push_screen(admin_screen.AdminMenu(self.user_info))
+        else:
+            self.message("Error: Admin menu is only available to users with 'Full access'.")
+    def action_save(self):
+        try:
+            self.app.security.save(fn_key=self.app.fn_key, db_conn=self.app.db_conn)
+            self.message("Data saved")
+        except Exception as e:
+            self.message(f"Error: {e}")
     def action_quit(self):
+        self.app.db_manger.close()
         self.app.exit()

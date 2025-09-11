@@ -21,7 +21,8 @@ class _content(Vertical):
         self.styles.align = ("center", "middle")
 
 class EncryptScreen(Screen):
-    BINDINGS = [('q', "quit", "Quit"), ('b', "go_to_previous_screen", "Go Back"), ('a', "admin_menu", "Admin Menu")]
+    BINDINGS = [('q', "quit", "Quit"), ('b', "go_to_previous_screen", "Go Back"), ('s', "save", "Save changes")
+                , ('a', "admin_menu", "Admin Menu")]
     def __init__(self, user_info: UserInfo):
         super().__init__()
         self.app: FolderLockApp
@@ -50,19 +51,21 @@ class EncryptScreen(Screen):
     
     @work(exclusive=True, thread=True)
     def encrypt_worker(self, path):
-        self.message("Checking folder.... please wait...")
+        self.app.call_from_thread(self.message, "Checking folder.... please wait...")
         try:
             conformed_path = self.app.lock_system.confirm_target_folder(user_path=path, mode=Mode.ENC)
             if conformed_path and self.app.call_from_thread(self.confirm):
-                self.message("Folder path is VALID. Encryption in progress... please wait...")
+                self.app.call_from_thread(self.message, "Folder path is VALID. Encryption in progress... please wait...")
                 self.app.lock_system.enc_dec_dispatcher(target_folder_path=conformed_path, mode=Mode.ENC)
                 self.app.call_from_thread(self.encrypt_valid)
             else:
-                self.message("Folder encryption aborted")
-                self.is_encrypting = False
+                self.app.call_from_thread(self.abort_encrypt)
         except Exception as e:
             self.app.call_from_thread(self.encrypt_error, e)
-            
+    
+    def abort_encrypt(self):
+        self.message("Folder encryption aborted")
+        self.is_encrypting = False
     def confirm(self):
         ask = self.app.push_screen_wait(pop_up.ConfirmPopUp("Warning: This folder is about to be encrypted."))
         return ask
@@ -79,5 +82,12 @@ class EncryptScreen(Screen):
     
     def action_go_to_previous_screen(self):
         self.app.pop_screen()
+    def action_save(self):
+        try:
+            self.app.security.save(fn_key=self.app.fn_key, db_conn=self.app.db_conn)
+            self.message("Data saved")
+        except Exception as e:
+            self.message(f"Error: {e}")
     def action_quit(self):
+        self.app.db_manger.close()
         self.app.exit()

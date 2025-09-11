@@ -23,7 +23,11 @@ class LockSystem():
 
     # checks if the target folder is valid to encrypt or decrypt
     def confirm_target_folder(self, user_path: str, mode = Mode):
+        if not user_path.strip():
+            raise err.EmptyString("Invalid path: input was empty.")
+        
         user_path = Path(user_path)
+        
         if not user_path.is_absolute():
             user_path = Path.home() / user_path
         user_path = user_path.expanduser().resolve(strict=False)

@@ -2,6 +2,8 @@
 
 class InvalidTargetError(Exception):
     pass
+class EmptyString(InvalidTargetError):
+    pass
 class WorkingDirectoryError(InvalidTargetError):
     pass
 class AlreadyEncryptedError(InvalidTargetError):
@@ -28,6 +30,12 @@ class NoWebCamDetected(FaceCamError):
     pass
 class WebCamError(FaceCamError):
     pass
+class Nolandmarks(FaceCamError):
+    pass
+class FrameTooBlury(FaceCamError):
+    pass
+class FrameTooDark(FaceCamError):
+    pass
 class DataBaseError(Exception):
     pass
 class InaccessbleDatabase(DataBaseError):
@@ -35,4 +43,14 @@ class InaccessbleDatabase(DataBaseError):
 class FetchInfoError(DataBaseError):
     pass
 class DecKeyNotFoundError(DataBaseError):
+    pass
+class SecurityError(Exception):
+    pass
+class SaltNotFound(SecurityError):
+    pass
+class DBWrongPassword(SecurityError):
+    pass
+class DatabaseNotFound(SecurityError):
+    pass
+class SaveError(SecurityError):
     pass

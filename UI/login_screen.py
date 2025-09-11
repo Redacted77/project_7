@@ -67,13 +67,13 @@ class LoginScreen(Screen):
         self.is_scanning = False
     
     def scan_error(self, error):
-        self.app.log_manger.generic_error(error)
         self.message(f"face-scan error: {error}")
         self.is_scanning = False
     
     def login(self, entered_pin):
         frs = self.app.facial_recognition_system
         if self.is_scanning:
+            self.app.log_manger.announce_attempt_login()
             self.message("face-scan was not done")
             return
         
@@ -81,24 +81,33 @@ class LoginScreen(Screen):
             try:
                 face_check_id =  frs.compar_faces_with_db(self.face_enc)
             except Exception as e:
+                self.app.log_manger.announce_attempt_login()
                 self.app.log_manger.generic_error(e)
-                self.message(f"{e}")
-                
+                self.message(f"{e}: in self.face_enc and entered_pin")
+
+            if not face_check_id:
+                self.app.log_manger.announce_attempt_login()
+                self.message("face was not recognized")
+                return
             try:
                 if self.app.db_manger.check_pin(id=face_check_id, pin=entered_pin) and face_check_id:
                     self.app.log_manger.announce_login(user=face_check_id)
                     self.message("login successful")
                     self.app.push_screen(functions_screen.FunctionsScreen(user_id=face_check_id))
                 else:
-                    self.message("Error: Wrong pin or face id")
+                    self.message(f"Error: Wrong pin or face id")
+                    self.app.log_manger.announce_attempt_login()
             except Exception as e:
+                self.app.log_manger.announce_attempt_login()
                 self.app.log_manger.generic_error(e)
-                self.message("Error try again")
+                self.message(f"Error try again: {e}")
         else:
+            self.app.log_manger.announce_attempt_login()
             self.message("Error: Messing pin or face id")
     
     def message(self, mess):
         self.query_one("#status_label", Static).update(mess)
     
     def action_quit(self):
+        self.app.db_manger.close()
         self.app.exit()
