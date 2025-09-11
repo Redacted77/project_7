@@ -5,6 +5,16 @@ It combines strong **encryption**, **facial recognition**, and a **secure databa
 
 ---
 
+![Example 1](screenshots\login.png)
+
+![Example 2](screenshots\main_screen.png)
+
+![Example 3](screenshots\decrypt.png)
+
+![Example 4](screenshots\admin_menu.png)
+
+---
+
 ## Features
 
 - **Master Password Vault** – all data and keys protected with PBKDF2.
