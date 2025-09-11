@@ -1,12 +1,12 @@
-import logs_system as Log
-import database_manager as Dbm
-import new_face_recod as FC
-import security_system as SS
-from new_locking_system import LockSystem
+from Folder_lock import logs_system as Log
+from Folder_lock import database_manager as Dbm
+from Folder_lock import facial_recognition_system as FC
+from Folder_lock import security_system as SS
+from Folder_lock.locking_system import LockSystem
 from textual.app import App
 from textual import work
-from UI import login_screen, add_user_screen, db_password_screen
-from security_system import Condition, Checks
+from Folder_lock.UI import login_screen, add_user_screen, db_password_screen
+from Folder_lock.security_system import Condition, Checks
 
 class FolderLockApp(App):
     def on_mount(self) -> None:
