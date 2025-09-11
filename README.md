@@ -65,8 +65,6 @@ By default, `pip install dlib` may try to compile from source, which fails unles
 This project was tested on **Windows + Python 3.13** with the prebuilt wheel.
 Download a prebuilt .whl from a trusted source.
 
-
-
 ## First Run
 1. Create a master password (cannot be changed later).
 2. Register your name, PIN, and face scan.
@@ -80,6 +78,7 @@ Download a prebuilt .whl from a trusted source.
 - s - save data
 - b - back
 - q - quit
+
 
 
 
